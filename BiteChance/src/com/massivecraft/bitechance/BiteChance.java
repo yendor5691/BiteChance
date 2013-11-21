@@ -1,16 +1,10 @@
 package com.massivecraft.bitechance;
 
-
-import java.text.DecimalFormat;
-
-import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.event.player.PlayerFishEvent.State;
 
 import com.gmail.nossr50.datatypes.skills.SkillType;
 import com.gmail.nossr50.skills.fishing.FishingManager;
@@ -19,52 +13,81 @@ import com.gmail.nossr50.util.Permissions;
 import com.gmail.nossr50.util.player.UserManager;
 import com.massivecraft.mcore.MPlugin;
 
-public class BiteChance extends MPlugin implements Listener 
+public class BiteChance extends MPlugin
 {
-    @Override
-    public void onEnable(){
-    	getServer().getPluginManager().registerEvents(this, this);
-    	Bukkit.getPluginManager().registerEvents(this, this);
-    	getLogger().info("BiteChance enabled!");
-    }
 
-public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-	
-	if (cmd.getName().equalsIgnoreCase("bitechance")) {
-		if (!(sender instanceof Player)) {
-			sender.sendMessage("This command can only be run by a player.");
-		} else {
-		    FishingManager fishingManager = UserManager.getPlayer(sender.getName()).getFishingManager();
-			double biteChance = Math.min(0.01 * ((fishingManager.getSkillLevel() + 250.0 )/ 250.0), 0.06);
-			DecimalFormat df = new DecimalFormat("0.00");
-			String bc = "Bite Chance: "+df.format(biteChance);
-			sender.sendMessage(bc);
-		}
-		return true;
+	// -------------------------------------------- //
+	// INSTANCE & CONSTRUCT
+	// -------------------------------------------- //
+
+	private static BiteChance i;
+
+	public static BiteChance get()
+	{
+		return i;
 	}
-	return false;
-}
-@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = false)
-public void onPlayerFishHigh(PlayerFishEvent event){
-    Player player = event.getPlayer();
 
-    if (Misc.isNPCEntity(player) || !Permissions.skillEnabled(player, SkillType.FISHING)) {        
-    	return;
-    }
+	public BiteChance()
+	{
+		BiteChance.i = this;
+	}
 
-    FishingManager fishingManager = UserManager.getPlayer(player).getFishingManager();
+	// -------------------------------------------- //
+	// FIELDS
+	// -------------------------------------------- //
 
-    switch (event.getState()) {
-        case FISHING:
-            if (fishingManager.canMasterAngler()) {
-                double biteChance = Math.min(0.01 * ((fishingManager.getSkillLevel() + 250.0 )/ 250.0), 0.06);
-                event.getHook().setBiteChance(biteChance);
-    		}
-            return;
+	// Commands
+	private BiteChanceCmd bitechance;
 
-        default:
-        	return;
-    }
-}
+	public BiteChanceCmd getbitechance()
+	{
+		return this.bitechance;
+	}
 
+	// -------------------------------------------- //
+	// OVERRIDE
+	// -------------------------------------------- //
+
+	@Override
+	public void onEnable()
+	{
+		if (!preEnable()) return;
+
+		// Collections
+		MConfColl.get().init();
+
+		// Commands
+		this.bitechance = new BiteChanceCmd();
+		this.bitechance.register();
+		
+		postEnable();
+	}
+
+	// -------------------------------------------- //
+	// LISTENER
+	// -------------------------------------------- //
+
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onPlayerFishHigh(PlayerFishEvent event)
+	{
+		Player player = event.getPlayer();
+
+		// Must be a player with the mcMMO Fishing Skill enabled
+		if (Misc.isNPCEntity(player)
+				|| !Permissions.skillEnabled(player, SkillType.FISHING)) return;
+
+		// Require FISHING (casting) event state
+		if (event.getState() != State.FISHING) return;
+
+		// Set the Bite Chance
+		FishingManager fishingManager = UserManager.getPlayer(player)
+				.getFishingManager();
+		event.getHook().setBiteChance(biteCalc(fishingManager));
+	}
+
+	public static double biteCalc(FishingManager fishingManager)
+	{
+		return Math.min(
+				0.01 * (fishingManager.getSkillLevel() / 250.0 + 1.0), 0.05);
+	}
 }

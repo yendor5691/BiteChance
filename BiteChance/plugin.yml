@@ -1,11 +1,6 @@
-main: com.massivecraft.bitechance.BiteChance
 name: BiteChance
-version: 0.0.1
-website: http://massivecraft.com/
+version: 0.0.2
+main: com.massivecraft.bitechance.BiteChance
 authors: [yendor46]
-description: BiteChance buffs the fishing bite chance proportional to the mcMMO fishing level, with a maximum of 80%.  
+description: BiteChance buffs the fishing bite chance proportional to the mcMMO fishing level, with bite chance per tick between 1% at level 0 and 5% at level 1000.
 depend: [mcMMO, mcore]
-softdepend: []
-commands:
-  bitechance:
-    description: Shows your fishing bite chance
