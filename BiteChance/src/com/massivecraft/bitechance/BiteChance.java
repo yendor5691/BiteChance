@@ -59,7 +59,7 @@ public class BiteChance extends MPlugin
 		// Commands
 		this.bitechance = new BiteChanceCmd();
 		this.bitechance.register();
-		
+
 		postEnable();
 	}
 
@@ -87,7 +87,7 @@ public class BiteChance extends MPlugin
 
 	public static double biteCalc(FishingManager fishingManager)
 	{
-		return Math.min(
-				0.01 * (fishingManager.getSkillLevel() / 250.0 + 1.0), 0.05);
+		return Math.min(0.01 * (fishingManager.getSkillLevel() / 250.0 + 1.0),
+				0.05);
 	}
 }

@@ -24,7 +24,7 @@ public class BiteChanceCmd extends MCommand
 	// -------------------------------------------- //
 	// OVERRIDE
 	// -------------------------------------------- //
-	
+
 	@Override
 	public List<String> getAliases()
 	{
